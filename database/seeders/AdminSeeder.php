@@ -15,6 +15,7 @@ class AdminSeeder extends Seeder {
             'password' => Hash::make('admin123'),
             'role' => 'admin',
             'foto_profil' => null,
+            'payment_method' => null,
         ]);
     }
 }

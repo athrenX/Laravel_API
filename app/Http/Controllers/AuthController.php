@@ -51,6 +51,8 @@ class AuthController extends Controller
                         'id' => $user->id,
                         'nama' => $user->nama,
                         'email' => $user->email,
+                        'foto_profil' => null,
+                        'payment_method' => null,
                     ],
                     'token' => $token,
                     'token_type' => 'Bearer'
@@ -103,7 +105,12 @@ class AuthController extends Controller
                         'id' => $user->id,
                         'nama' => $user->nama,
                         'email' => $user->email,
+                        'foto_profil' => $user->foto_profil 
+                            ? url('storage/foto_profil/' . $user->foto_profil)
+                            : null,
+                        'payment_method' => $user->payment_method,
                     ],
+
                     'token' => $token,
                     'token_type' => 'Bearer'
                 ]
@@ -123,13 +130,24 @@ class AuthController extends Controller
      */
     public function getUser(Request $request)
     {
+        $user = $request->user();
+
         return response()->json([
             'success' => true,
             'data' => [
-                'user' => $request->user()
+                'user' => [
+                    'id' => $user->id,
+                    'nama' => $user->nama,
+                    'email' => $user->email,
+                    'foto_profil' => $user->foto_profil 
+                        ? url('storage/foto_profil/' . $user->foto_profil)
+                        : null,
+                    'payment_method' => $user->payment_method,
+                ]
             ]
         ]);
     }
+
 
     /**
      * Update user profile
