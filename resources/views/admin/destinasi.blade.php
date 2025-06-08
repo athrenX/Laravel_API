@@ -450,8 +450,8 @@
                     </td>
                     <td>
                       @if($destinasi->gambar)
-                        <a href="{{ asset('storage/' . $destinasi->gambar) }}" target="_blank" data-bs-toggle="tooltip" title="Lihat gambar penuh">
-                          <img src="{{ asset('storage/' . $destinasi->gambar) }}" width="80" height="60" class="img-thumbnail" style="object-fit: cover;">
+                        <a href="{{ asset($destinasi->gambar) }}" target="_blank" data-bs-toggle="tooltip" title="Lihat gambar penuh">
+                          <img src="{{ asset($destinasi->gambar) }}" width="80" height="60" class="img-thumbnail" style="object-fit: cover;">
                         </a>
                       @else
                         <div class="text-muted text-center py-3">
