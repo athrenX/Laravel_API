@@ -12,13 +12,13 @@
       --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
       --danger-gradient: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
     }
-    
+
     body {
       background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
       min-height: 100vh;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    
+
     .main-header {
       background: var(--primary-gradient);
       color: white;
@@ -27,7 +27,7 @@
       border-radius: 0 0 20px 20px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.1);
     }
-    
+
     .card {
       border: none;
       border-radius: 15px;
@@ -36,12 +36,12 @@
       backdrop-filter: blur(10px);
       background: rgba(255,255,255,0.95);
     }
-    
+
     .card:hover {
       transform: translateY(-5px);
       box-shadow: 0 20px 40px rgba(0,0,0,0.15);
     }
-    
+
     .card-header {
       background: var(--primary-gradient) !important;
       color: white !important;
@@ -50,7 +50,7 @@
       font-weight: 600;
       font-size: 1.1rem;
     }
-    
+
     .form-control, .form-select {
       border: 2px solid #e9ecef;
       border-radius: 10px;
@@ -58,19 +58,19 @@
       transition: all 0.3s ease;
       background: rgba(255,255,255,0.8);
     }
-    
+
     .form-control:focus, .form-select:focus {
       border-color: #667eea;
       box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
       background: white;
     }
-    
+
     .form-label {
       font-weight: 600;
       color: #495057;
       margin-bottom: 0.5rem;
     }
-    
+
     .btn {
       border-radius: 10px;
       padding: 0.75rem 1.5rem;
@@ -78,43 +78,43 @@
       transition: all 0.3s ease;
       border: none;
     }
-    
+
     .btn-success {
       background: var(--success-gradient);
       box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4);
     }
-    
+
     .btn-success:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(17, 153, 142, 0.6);
     }
-    
+
     .btn-primary {
       background: var(--primary-gradient);
       box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
     }
-    
+
     .btn-primary:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
     }
-    
+
     .btn-danger {
       background: var(--danger-gradient);
       box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
     }
-    
+
     .btn-danger:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 25px rgba(255, 107, 107, 0.6);
     }
-    
+
     .table {
       border-radius: 10px;
       overflow: hidden;
       background: white;
     }
-    
+
     .table thead th {
       background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
       border: none;
@@ -122,65 +122,65 @@
       padding: 1rem;
       color: #495057;
     }
-    
+
     .table tbody td {
       padding: 1rem;
       vertical-align: middle;
       border-color: #f1f3f4;
     }
-    
+
     .img-thumbnail {
       border-radius: 8px;
       transition: transform 0.3s ease;
     }
-    
+
     .img-thumbnail:hover {
       transform: scale(1.1);
     }
-    
+
     .alert {
       border: none;
       border-radius: 10px;
       padding: 1rem 1.5rem;
       margin-bottom: 1.5rem;
     }
-    
+
     .alert-success {
       background: linear-gradient(135deg, rgba(17, 153, 142, 0.1) 0%, rgba(56, 239, 125, 0.1) 100%);
       border-left: 4px solid #11998e;
       color: #0f5132;
     }
-    
+
     .alert-danger {
       background: linear-gradient(135deg, rgba(255, 107, 107, 0.1) 0%, rgba(238, 90, 36, 0.1) 100%);
       border-left: 4px solid #ff6b6b;
       color: #842029;
     }
-    
+
     .input-group-text {
       background: var(--primary-gradient);
       color: white;
       border: none;
       border-radius: 10px 0 0 10px;
     }
-    
+
     .gallery-preview {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
       margin-top: 10px;
     }
-    
+
     .price-display {
       font-weight: 700;
       color: #11998e;
       font-size: 1.1rem;
     }
-    
+
     .loading-spinner {
       display: none;
     }
-    
+
     .no-rating {
       color: #6c757d;
       font-style: italic;
@@ -190,35 +190,35 @@
       border-radius: 15px;
       display: inline-block;
     }
-    
+
     .rating-display {
       color: #ffc107;
     }
-    
+
     .status-badge {
       font-size: 0.75rem;
       padding: 0.25rem 0.5rem;
       border-radius: 12px;
     }
-    
+
     .status-new {
       background: linear-gradient(45deg, #28a745, #20c997);
       color: white;
     }
-    
+
     @media (max-width: 768px) {
       .main-header {
         padding: 1.5rem 0;
       }
-      
+
       .card-body {
         padding: 1rem;
       }
-      
+
       .table-responsive {
         font-size: 0.875rem;
       }
-      
+
       .btn {
         padding: 0.5rem 1rem;
         font-size: 0.875rem;
@@ -450,8 +450,8 @@
                     </td>
                     <td>
                       @if($destinasi->gambar)
-                        <a href="{{ asset('storage/' . $destinasi->gambar) }}" target="_blank" data-bs-toggle="tooltip" title="Lihat gambar penuh">
-                          <img src="{{ asset('storage/' . $destinasi->gambar) }}" width="80" height="60" class="img-thumbnail" style="object-fit: cover;">
+                        <a href="{{ asset( $destinasi->gambar) }}" target="_blank" data-bs-toggle="tooltip" title="Lihat gambar penuh">
+                          <img src="{{ asset($destinasi->gambar) }}" width="80" height="60" class="img-thumbnail" style="object-fit: cover;">
                         </a>
                       @else
                         <div class="text-muted text-center py-3">
@@ -460,15 +460,15 @@
                         </div>
                       @endif
                     </td>
-                    
-                          
+
+
                         @php
                         $galeri = is_string($destinasi->galeri) ? json_decode($destinasi->galeri, true) : $destinasi->galeri;
                         $galeri = is_array($galeri) ? array_filter($galeri, fn($item) => is_string($item) && !empty($item)) : [];
                     @endphp
-                    
+
                     <td>
-                          
+
                         @php
                         $galeri = is_string($destinasi->galeri) ? json_decode($destinasi->galeri, true) : $destinasi->galeri;
                         $galeri = is_array($galeri) ? array_filter($galeri, fn($item) => is_string($item) && !empty($item)) : [];
@@ -489,8 +489,8 @@
                       @else
                         <div class="text-muted text-center">Tidak ada galeri</div>
                       @endif
-                    </td>  
-        
+                    </td>
+
                     <td>
                       <div class="d-flex gap-2">
                         <a href="/admin/destinasi/{{ $destinasi->id }}/edit" class="btn btn-sm btn-primary" data-bs-toggle="tooltip" title="Edit destinasi">
@@ -533,11 +533,11 @@
     document.getElementById('addDestinationForm').addEventListener('submit', function(e) {
       const submitBtn = this.querySelector('button[type="submit"]');
       const spinner = submitBtn.querySelector('.loading-spinner');
-      
+
       // Validate required fields
       const requiredFields = this.querySelectorAll('[required]');
       let isValid = true;
-      
+
       requiredFields.forEach(field => {
         if (!field.value.trim()) {
           isValid = false;
@@ -546,13 +546,13 @@
           field.classList.remove('is-invalid');
         }
       });
-      
+
       if (!isValid) {
         e.preventDefault();
         alert('Mohon lengkapi semua field yang wajib diisi!');
         return;
       }
-      
+
       submitBtn.disabled = true;
       spinner.style.display = 'inline-block';
       submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Menyimpan...';
@@ -562,14 +562,14 @@
     document.getElementById('galleryImages').addEventListener('change', function(e) {
       const preview = document.getElementById('galleryPreview');
       preview.innerHTML = '';
-      
+
       if (e.target.files && e.target.files.length > 0) {
         const fileCount = e.target.files.length;
         const countBadge = document.createElement('div');
         countBadge.className = 'badge bg-info mb-2';
         countBadge.innerHTML = `<i class="fas fa-images me-1"></i>${fileCount} file dipilih`;
         preview.appendChild(countBadge);
-        
+
         Array.from(e.target.files).slice(0, 5).forEach((file, index) => {
           if (file.type.startsWith('image/')) {
             const reader = new FileReader();
@@ -586,7 +586,7 @@
             reader.readAsDataURL(file);
           }
         });
-        
+
         if (fileCount > 5) {
           const moreBadge = document.createElement('div');
           moreBadge.className = 'text-muted small mt-2';
@@ -608,7 +608,7 @@
             if (existingPreview) {
               existingPreview.remove();
             }
-            
+
             // Create new preview
             const preview = document.createElement('div');
             preview.id = 'mainImagePreview';
@@ -617,7 +617,7 @@
               <img src="${e.target.result}" class="img-thumbnail" style="width: 100px; height: 75px; object-fit: cover;">
               <small class="text-muted d-block mt-1">${file.name}</small>
             `;
-            
+
             document.getElementById('mainImage').parentNode.appendChild(preview);
           }
           reader.readAsDataURL(file);
@@ -633,7 +633,7 @@
       if (mainPreview) {
         mainPreview.remove();
       }
-      
+
       // Remove validation classes
       document.querySelectorAll('.is-invalid').forEach(el => {
         el.classList.remove('is-invalid');
@@ -647,7 +647,7 @@
           this.style.transform = 'translateY(-5px)';
         }
       });
-      
+
       card.addEventListener('mouseleave', function() {
         if (!this.classList.contains('no-hover')) {
           this.style.transform = 'translateY(0)';
@@ -662,7 +662,7 @@
           // Don't add loading to delete buttons since they have confirmation
           return;
         }
-        
+
         setTimeout(() => {
           this.disabled = true;
           this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
