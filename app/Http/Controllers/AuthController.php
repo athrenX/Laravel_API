@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -72,58 +73,82 @@ class AuthController extends Controller
      * Login user
      */
     public function login(Request $request)
-    {
-        try {
-            $validator = Validator::make($request->all(), [
-                'email' => 'required|email',
-                'password' => 'required'
-            ]);
+{
+    try {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required'
+        ]);
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-
-            if (!Auth::attempt($request->only('email', 'password'))) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Invalid credentials'
-                ], 401);
-            }
-
-            $user = User::where('email', $request->email)->firstOrFail();
-            $token = $user->createToken('auth_token')->plainTextToken;
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Login successful',
-                'data' => [
-                    'user' => [
-                        'id' => $user->id,
-                        'nama' => $user->nama,
-                        'email' => $user->email,
-                        'foto_profil' => $user->foto_profil 
-                            ? url('storage/foto_profil/' . $user->foto_profil)
-                            : null,
-                        'payment_method' => $user->payment_method,
-                    ],
-
-                    'token' => $token,
-                    'token_type' => 'Bearer'
-                ]
-            ]);
-
-        } catch (\Exception $e) {
+        if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Login failed',
-                'error' => $e->getMessage()
-            ], 500);
+                'message' => 'Validation failed',
+                'errors' => $validator->errors()
+            ], 422);
         }
+
+        $email = $request->input('email');
+        $password = $request->input('password');
+
+        // Cari user dulu berdasarkan email
+        $user = User::where('email', $email)->first();
+
+        if (!$user) {
+            Log::error("Login gagal: user dengan email $email tidak ditemukan");
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid credentials - user not found'
+            ], 401);
+        }
+
+        // Cek password secara manual pakai Hash::check
+        if (!Hash::check($password, $user->password)) {
+            Log::error("Login gagal: password salah untuk user $email");
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid credentials - wrong password'
+            ], 401);
+        }
+
+        // Kalau lolos, lakukan Auth::attempt (sebenarnya optional karena sudah dicek manual)
+        if (!Auth::attempt(['email' => $email, 'password' => $password])) {
+            Log::error("Login gagal: Auth::attempt gagal untuk user $email");
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid credentials'
+            ], 401);
+        }
+
+        // Create token dan response berhasil login
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Login successful',
+            'data' => [
+                'user' => [
+                    'id' => $user->id,
+                    'nama' => $user->nama,
+                    'email' => $user->email,
+                    'foto_profil' => $user->foto_profil ? url('storage/foto_profil/' . $user->foto_profil) : null,
+                    'payment_method' => $user->payment_method,
+                    'role' => $user->role,
+                ],
+                'token' => $token,
+                'token_type' => 'Bearer'
+            ]
+        ]);
+    } catch (\Exception $e) {
+        Log::error("Login failed with exception: " . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Login failed',
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
+
 
     /**
      * Get authenticated user
@@ -143,9 +168,11 @@ class AuthController extends Controller
                         ? url('storage/foto_profil/' . $user->foto_profil)
                         : null,
                     'payment_method' => $user->payment_method,
+                    'role' => $user->role,  // Tambahkan ini
                 ]
             ]
         ]);
+        
     }
 
 

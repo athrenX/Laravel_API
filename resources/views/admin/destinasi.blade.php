@@ -263,7 +263,6 @@
       </div>
     @endif
 
-    <!-- Form Tambah Destinasi -->
     <div class="card mb-5">
       <div class="card-header">
         <i class="fas fa-plus-circle me-2"></i>Tambah Destinasi Baru
@@ -350,7 +349,6 @@
       </div>
     </div>
 
-    <!-- Tabel Daftar Destinasi -->
     <div class="card">
       <div class="card-header d-flex justify-content-between align-items-center">
         <div>
@@ -450,7 +448,7 @@
                     </td>
                     <td>
                       @if($destinasi->gambar)
-                        <a href="{{ asset( $destinasi->gambar) }}" target="_blank" data-bs-toggle="tooltip" title="Lihat gambar penuh">
+                        <a href="{{ asset($destinasi->gambar) }}" target="_blank" data-bs-toggle="tooltip" title="Lihat gambar penuh">
                           <img src="{{ asset($destinasi->gambar) }}" width="80" height="60" class="img-thumbnail" style="object-fit: cover;">
                         </a>
                       @else
@@ -465,14 +463,14 @@
                         @php
                         $galeri = is_string($destinasi->galeri) ? json_decode($destinasi->galeri, true) : $destinasi->galeri;
                         $galeri = is_array($galeri) ? array_filter($galeri, fn($item) => is_string($item) && !empty($item)) : [];
-                    @endphp
+                        @endphp
 
                     <td>
 
                         @php
                         $galeri = is_string($destinasi->galeri) ? json_decode($destinasi->galeri, true) : $destinasi->galeri;
                         $galeri = is_array($galeri) ? array_filter($galeri, fn($item) => is_string($item) && !empty($item)) : [];
-                    @endphp
+                        @endphp
                       @if(count($galeri) > 0)
                         <div class="d-flex flex-wrap gap-1">
                           @foreach(array_slice($galeri, 0, 3) as $galeriItem)
