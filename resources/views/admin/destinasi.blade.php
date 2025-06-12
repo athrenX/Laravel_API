@@ -280,12 +280,12 @@
               <label class="form-label"><i class="fas fa-list me-1"></i>Kategori</label>
               <select name="kategori" class="form-select" required>
                 <option value="">Pilih Kategori</option>
-                <option value="Gunung" {{ old('kategori') == 'Gunung' ? 'selected' : '' }}>🏔️ Gunung</option>
-                <option value="Pantai" {{ old('kategori') == 'Pantai' ? 'selected' : '' }}>🏖️ Pantai</option>
-                <option value="Danau" {{ old('kategori') == 'Danau' ? 'selected' : '' }}>🏞️ Danau</option>
+                <option value="Gunung" {{ old('kategori') == 'Gunung' ? 'selected' : '' }}>🏔 Gunung</option>
+                <option value="Pantai" {{ old('kategori') == 'Pantai' ? 'selected' : '' }}>🏖 Pantai</option>
+                <option value="Danau" {{ old('kategori') == 'Danau' ? 'selected' : '' }}>🏞 Danau</option>
                 <option value="Air Terjun" {{ old('kategori') == 'Air Terjun' ? 'selected' : '' }}>💦 Air Terjun</option>
                 <option value="Taman Nasional" {{ old('kategori') == 'Taman Nasional' ? 'selected' : '' }}>🌳 Taman Nasional</option>
-                <option value="Budaya" {{ old('kategori') == 'Budaya' ? 'selected' : '' }}>🏛️ Budaya</option>
+                <option value="Budaya" {{ old('kategori') == 'Budaya' ? 'selected' : '' }}>🏛 Budaya</option>
               </select>
             </div>
           </div>
@@ -389,13 +389,13 @@
                       <span class="badge bg-primary rounded-pill">
                         @switch($destinasi->kategori)
                           @case('Gunung')
-                            🏔️ {{ $destinasi->kategori }}
+                            🏔 {{ $destinasi->kategori }}
                             @break
                           @case('Pantai')
-                            🏖️ {{ $destinasi->kategori }}
+                            🏖 {{ $destinasi->kategori }}
                             @break
                           @case('Danau')
-                            🏞️ {{ $destinasi->kategori }}
+                            🏞 {{ $destinasi->kategori }}
                             @break
                           @case('Air Terjun')
                             💦 {{ $destinasi->kategori }}
@@ -404,7 +404,7 @@
                             🌳 {{ $destinasi->kategori }}
                             @break
                           @case('Budaya')
-                            🏛️ {{ $destinasi->kategori }}
+                            🏛 {{ $destinasi->kategori }}
                             @break
                           @default
                             📍 {{ $destinasi->kategori }}
@@ -497,7 +497,7 @@
                         <form method="POST" action="/admin/destinasi/{{ $destinasi->id }}" class="d-inline">
                           @csrf
                           @method('DELETE')
-                          <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('⚠️ Yakin ingin menghapus destinasi {{ $destinasi->nama }}? Tindakan ini tidak dapat dibatalkan!')" data-bs-toggle="tooltip" title="Hapus destinasi">
+                          <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('⚠ Yakin ingin menghapus destinasi {{ $destinasi->nama }}? Tindakan ini tidak dapat dibatalkan!')" data-bs-toggle="tooltip" title="Hapus destinasi">
                             <i class="fas fa-trash"></i>
                           </button>
                         </form>
@@ -565,7 +565,7 @@
         const fileCount = e.target.files.length;
         const countBadge = document.createElement('div');
         countBadge.className = 'badge bg-info mb-2';
-        countBadge.innerHTML = `<i class="fas fa-images me-1"></i>${fileCount} file dipilih`;
+        countBadge.innerHTML = <i class="fas fa-images me-1"></i>${fileCount} file dipilih;
         preview.appendChild(countBadge);
 
         Array.from(e.target.files).slice(0, 5).forEach((file, index) => {
@@ -588,7 +588,7 @@
         if (fileCount > 5) {
           const moreBadge = document.createElement('div');
           moreBadge.className = 'text-muted small mt-2';
-          moreBadge.innerHTML = `<i class="fas fa-plus me-1"></i>+${fileCount - 5} file lainnya`;
+          moreBadge.innerHTML = <i class="fas fa-plus me-1"></i>+${fileCount - 5} file lainnya;
           preview.appendChild(moreBadge);
         }
       }
