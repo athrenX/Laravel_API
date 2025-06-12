@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+
 
 class AuthController extends Controller
 {
@@ -131,7 +133,7 @@ class AuthController extends Controller
                     'id' => $user->id,
                     'nama' => $user->nama,
                     'email' => $user->email,
-                    'foto_profil' => $user->foto_profil ? url('storage/foto_profil/' . $user->foto_profil) : null,
+                    'foto_profil' => $user->foto_profil ? url('storage/' . $user->foto_profil) : null,
                     'payment_method' => $user->payment_method,
                     'role' => $user->role,
                 ],
@@ -165,7 +167,7 @@ class AuthController extends Controller
                     'nama' => $user->nama,
                     'email' => $user->email,
                     'foto_profil' => $user->foto_profil 
-                        ? url('storage/foto_profil/' . $user->foto_profil)
+                        ? url('storage/' . $user->foto_profil)
                         : null,
                     'payment_method' => $user->payment_method,
                     'role' => $user->role,  // Tambahkan ini
@@ -179,10 +181,15 @@ class AuthController extends Controller
     /**
      * Update user profile
      */
-    public function updateProfile(Request $request)
+ public function updateProfile(Request $request)
 {
     try {
         $user = $request->user();
+
+        Log::info('[PROFILE] SEBELUM UPDATE:', [
+            'id' => $user->id,
+            'foto_profil' => $user->foto_profil
+        ]);
 
         $validator = Validator::make($request->all(), [
             'nama' => 'sometimes|string|max:255',
@@ -192,6 +199,7 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
+            Log::warning('[PROFILE] Validasi gagal', $validator->errors()->toArray());
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
@@ -199,27 +207,48 @@ class AuthController extends Controller
             ], 422);
         }
 
-        // Update data user
         if ($request->has('nama')) {
             $user->nama = $request->nama;
         }
-
         if ($request->has('email')) {
             $user->email = $request->email;
         }
         if ($request->has('payment_method')) {
             $user->payment_method = $request->payment_method;
-         }
-
-        // Simpan foto profil jika ada
-        if ($request->hasFile('foto_profil')) {
-            $file = $request->file('foto_profil');
-            $filename = uniqid('foto_') . '.' . $file->getClientOriginalExtension();
-            $file->storeAs('public/foto_profil', $filename);
-            $user->foto_profil = $filename;
         }
 
+        // LOG sebelum update foto
+        Log::info('[PROFILE] Sebelum update foto:', [
+            'foto_profil_lama' => $user->foto_profil
+        ]);
+
+        if ($request->hasFile('foto_profil')) {
+            Log::info('[PROFILE] Ada upload foto:', [
+                'file_name' => $request->file('foto_profil')->getClientOriginalName()
+            ]);
+            if ($user->foto_profil && Storage::disk('public')->exists($user->foto_profil)) {
+                Log::info('[PROFILE] Hapus foto lama:', [
+                    'file_path' => $user->foto_profil
+                ]);
+                Storage::disk('public')->delete($user->foto_profil);
+            }
+            $path = $request->file('foto_profil')->store('foto_profil', 'public');
+            Log::info('[PROFILE] Path hasil upload:', [
+                'new_path' => $path
+            ]);
+            $user->foto_profil = $path;
+        }
+
+        // LOG setelah proses update foto
+        Log::info('[PROFILE] SEBELUM SAVE:', [
+            'foto_profil' => $user->foto_profil
+        ]);
+
         $user->save();
+
+        Log::info('[PROFILE] SETELAH SAVE:', [
+            'foto_profil' => $user->foto_profil
+        ]);
 
         return response()->json([
             'success' => true,
@@ -230,14 +259,14 @@ class AuthController extends Controller
                     'nama' => $user->nama,
                     'email' => $user->email,
                     'foto_profil' => $user->foto_profil 
-                        ? url('storage/foto_profil/' . $user->foto_profil)
+                        ? url('storage/' . $user->foto_profil)
                         : null,
                     'payment_method' => $user->payment_method,
                 ]
             ]
         ]);
-
     } catch (\Exception $e) {
+        Log::error('[PROFILE] ERROR:', ['msg' => $e->getMessage()]);
         return response()->json([
             'success' => false,
             'message' => 'Update profile failed',
@@ -245,6 +274,9 @@ class AuthController extends Controller
         ], 500);
     }
 }
+
+
+
 
 
     /**
