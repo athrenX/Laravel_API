@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
 
-
 class Destinasi extends Model
 {
     use HasFactory;
@@ -43,6 +42,10 @@ class Destinasi extends Model
 
         // Jika bukan URL lengkap, prepend dengan asset()
         return asset('storage/' . $value);
+    }
+    public function kendaraans()
+    {
+        return $this->hasMany(Kendaraan::class);
     }
 
 

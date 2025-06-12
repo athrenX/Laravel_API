@@ -9,7 +9,10 @@
         th, td { padding: 12px; border: 1px solid #e5e7eb; text-align: left; }
         th { background: #3b82f6; color: white; }
         .btn { padding: 8px 12px; background: #10b981; color: white; text-decoration: none; border-radius: 5px; }
-        .btn:hover { background: #059669; }
+        .btn-danger { background: #ef4444; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-edit { background: #f59e0b; }
+        .btn-edit:hover { background: #d97706; }
         .top-bar { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         h2 { color: #1f2937; }
     </style>
@@ -30,20 +33,27 @@
     <table>
         <thead>
             <tr>
+                <th>ID</th>
+                <th>Destinasi</th>
                 <th>Jenis</th>
                 <th>Tipe</th>
                 <th>Kapasitas</th>
+                <th>Kursi Tersedia</th>
                 <th>Harga</th>
                 <th>Fasilitas</th>
                 <th>Gambar</th>
+                <th>Aksi</th>
             </tr>
         </thead>
         <tbody>
             @foreach($kendaraans as $k)
                 <tr>
+                    <td>{{ $k->id }}</td>
+                    <td>{{ $k->destinasi->nama ?? 'N/A' }}</td>
                     <td>{{ $k->jenis }}</td>
                     <td>{{ $k->tipe }}</td>
                     <td>{{ $k->kapasitas }}</td>
+                    <td>{{ implode(', ', $k->available_seats ?? []) }}</td> {{-- Pastikan menampilkan array dengan aman --}}
                     <td>Rp{{ number_format($k->harga, 0, ',', '.') }}</td>
                     <td>{{ $k->fasilitas }}</td>
                     <td>
@@ -52,6 +62,14 @@
                         @else
                             -
                         @endif
+                    </td>
+                    <td>
+                        <a href="{{ route('admin.kendaraan.edit', $k->id) }}" class="btn btn-edit">Edit</a>
+                        <form action="{{ route('admin.kendaraan.destroy', $k->id) }}" method="POST" style="display:inline-block;">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="btn btn-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus kendaraan ini?')">Hapus</button>
+                        </form>
                     </td>
                 </tr>
             @endforeach

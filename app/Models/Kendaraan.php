@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Kendaraan extends Model
 {
     protected $fillable = [
+        'destinasi_id', // Pastikan ini ada
         'jenis',
         'kapasitas',
         'harga',
@@ -17,7 +18,12 @@ class Kendaraan extends Model
     ];
 
     protected $casts = [
-        'available_seats' => 'array',
+        'available_seats' => 'array', // Pastikan ini ada
         'harga' => 'float',
     ];
+
+    public function destinasi()
+    {
+        return $this->belongsTo(Destinasi::class);
+    }
 }
