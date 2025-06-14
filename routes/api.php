@@ -50,5 +50,5 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::put('/pemesanans/{pemesanan}', [PemesananController::class, 'update']);
 
     // Custom route for users to view their own bookings.
-    Route::get('/my-pemesanans', [PemesananController::class, 'index'])->middleware('can:view-own-pemesanans');
+    Route::get('/my-pemesanans', [PemesananController::class, 'index']);
 });
