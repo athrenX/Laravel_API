@@ -21,7 +21,7 @@ use App\Http\Controllers\Api\PemesananController;
 
 // Public Web Route
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 // Admin Login & Logout Routes
