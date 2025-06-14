@@ -166,7 +166,7 @@ class AuthController extends Controller
                     'id' => $user->id,
                     'nama' => $user->nama,
                     'email' => $user->email,
-                    'foto_profil' => $user->foto_profil 
+                    'foto_profil' => $user->foto_profil
                         ? url('storage/' . $user->foto_profil)
                         : null,
                     'payment_method' => $user->payment_method,
@@ -174,7 +174,7 @@ class AuthController extends Controller
                 ]
             ]
         ]);
-        
+
     }
 
 
@@ -258,7 +258,7 @@ class AuthController extends Controller
                     'id' => $user->id,
                     'nama' => $user->nama,
                     'email' => $user->email,
-                    'foto_profil' => $user->foto_profil 
+                    'foto_profil' => $user->foto_profil
                         ? url('storage/' . $user->foto_profil)
                         : null,
                     'payment_method' => $user->payment_method,

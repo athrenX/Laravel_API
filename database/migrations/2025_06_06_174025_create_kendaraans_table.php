@@ -13,17 +13,18 @@ class CreateKendaraansTable extends Migration
     {
         Schema::create('kendaraans', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('destinasi_id') // foreign key
-                    ->constrained('destinasis') // refer ke tabel destinasis
-                    ->onDelete('cascade');      // jika destinasi dihapus, kendaraan ikut dihapus
+            $table->foreignId('destinasi_id')
+                    ->constrained('destinasis')
+                    ->onDelete('cascade');
 
             $table->string('jenis');
             $table->integer('kapasitas');
             $table->decimal('harga', 10, 2);
             $table->string('tipe');
-            $table->string('gambar')->nullable(); // Ditambahkan nullable() untuk fleksibilitas
+            $table->string('gambar')->nullable();
             $table->text('fasilitas')->nullable();
-            $table->json('available_seats')->nullable(); // Kolom ini akan menyimpan array kursi yang tersedia
+            $table->json('available_seats'); // Kolom ini akan menyimpan array kursi yang tersedia
+            $table->json('held_seats')->default(json_encode([])); // *** PENTING: Set default ke array kosong [] ***
             $table->timestamps();
         });
     }

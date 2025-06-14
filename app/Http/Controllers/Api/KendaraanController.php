@@ -4,33 +4,32 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Kendaraan;
-use App\Models\Destinasi; // Import Destinasi model
+use App\Models\Destinasi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\DB; // Import DB facade for transaction
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class KendaraanController extends Controller
 {
-    /**
-     * Display a listing of the vehicles for a specific destination.
-     * Digunakan oleh Flutter untuk mendapatkan kendaraan berdasarkan destinasi.
-     */
     public function indexByDestinasi($destinasiId)
     {
         try {
             $destinasi = Destinasi::findOrFail($destinasiId);
-            $kendaraans = $destinasi->kendaraans; // Ambil kendaraan yang terkait dengan destinasi
+            $kendaraans = $destinasi->kendaraans;
 
-            // Format URL gambar agar dapat diakses dari Flutter
             $kendaraans->each(function ($kendaraan) {
                 if ($kendaraan->gambar) {
                     $kendaraan->gambar = asset('storage/' . $kendaraan->gambar);
                 }
-                // Pastikan available_seats selalu array, meskipun null dari DB
-                // Laravel akan otomatis mengonversi kolom JSON ke array/object ketika diakses
-                // Tapi untuk jaminan, kita bisa pastikan di sini jika ada keraguan pada versi Laravel lama
-                $kendaraan->available_seats = is_array($kendaraan->available_seats) ? $kendaraan->available_seats : (json_decode($kendaraan->available_seats, true) ?? []);
+                // Pastikan available_seats dan held_seats selalu array of integers
+                $kendaraan->available_seats = collect($kendaraan->available_seats ?? [])->map(function ($item) {
+                    return (int) $item; // Pastikan semua elemen adalah integer
+                })->toArray();
+                $kendaraan->held_seats = collect($kendaraan->held_seats ?? [])->map(function ($item) {
+                    return (int) $item; // Pastikan semua elemen adalah integer
+                })->toArray();
             });
 
             return response()->json([
@@ -45,6 +44,7 @@ class KendaraanController extends Controller
                 'data' => null,
             ], 404);
         } catch (\Exception $e) {
+            Log::error("Error in indexByDestinasi: " . $e->getMessage() . " on line " . $e->getLine());
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to retrieve kendaraan: ' . $e->getMessage(),
@@ -53,72 +53,84 @@ class KendaraanController extends Controller
         }
     }
 
-    /**
-     * Update the available seats for a specific vehicle.
-     * Digunakan oleh Flutter setelah user memilih kursi.
-     */
-    public function updateSeats(Request $request, $kendaraanId)
+    public function holdSeats(Request $request, $kendaraanId)
     {
-        DB::beginTransaction(); // Mulai transaksi database
+        DB::beginTransaction();
 
         try {
             $request->validate([
-                'booked_seats' => 'required|array',
-                'booked_seats.*' => 'integer|min:1',
+                'seats_to_hold' => 'required|array',
+                'seats_to_hold.*' => 'integer|min:1',
             ]);
 
-            $kendaraan = Kendaraan::findOrFail($kendaraanId);
+            $kendaraan = Kendaraan::where('id', $kendaraanId)->lockForUpdate()->firstOrFail();
 
-            // Pastikan available_seats selalu array
-            $currentAvailableSeats = $kendaraan->available_seats ?? [];
-            if (!is_array($currentAvailableSeats)) {
-                $currentAvailableSeats = json_decode($currentAvailableSeats, true) ?? [];
-            }
+            $currentAvailableSeats = collect($kendaraan->available_seats ?? [])->map(fn($item) => (int) $item)->toArray();
+            $currentHeldSeats = collect($kendaraan->held_seats ?? [])->map(fn($item) => (int) $item)->toArray();
+            $seatsToHold = collect($request->input('seats_to_hold'))->map(fn($item) => (int) $item)->toArray();
 
-            $seatsToBook = $request->input('booked_seats');
+            Log::info("DEBUG_KENDARAAN_HOLD: holdSeats for Kendaraan ID: $kendaraanId");
+            Log::info("DEBUG_KENDARAAN_HOLD: Current Available Seats (LOCKED): " . json_encode($currentAvailableSeats));
+            Log::info("DEBUG_KENDARAAN_HOLD: Current Held Seats (LOCKED): " . json_encode($currentHeldSeats));
+            Log::info("DEBUG_KENDARAAN_HOLD: Seats to Hold from Request: " . json_encode($seatsToHold));
 
-            // Memastikan semua kursi yang akan dipesan benar-benar tersedia
-            foreach ($seatsToBook as $seat) {
+            foreach ($seatsToHold as $seat) {
                 if (!in_array($seat, $currentAvailableSeats)) {
-                    DB::rollBack(); // Batalkan transaksi
+                    DB::rollBack();
+                    Log::warning("DEBUG_KENDARAAN_HOLD: Kursi $seat TIDAK TERSEDIA di available_seats. Current available: " . json_encode($currentAvailableSeats));
                     return response()->json([
                         'status' => 'error',
-                        'message' => "Kursi $seat tidak tersedia. Silakan refresh dan coba lagi.",
-                        'data' => $kendaraan->fresh()->toArray(), // Kirim data kendaraan terbaru
-                    ], 409); // Conflict status code
+                        'message' => "Kursi $seat tidak tersedia lagi. Silakan refresh dan pilih kursi lain.",
+                        'data' => $kendaraan->fresh()->toArray(),
+                    ], 409);
+                }
+                if (in_array($seat, $currentHeldSeats)) {
+                    DB::rollBack();
+                    Log::warning("DEBUG_KENDARAAN_HOLD: Kursi $seat SUDAH DITAHAN. Current held: " . json_encode($currentHeldSeats));
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => "Kursi $seat sudah ditahan oleh pemesanan lain. Silakan refresh dan pilih kursi lain.",
+                        'data' => $kendaraan->fresh()->toArray(),
+                    ], 409);
                 }
             }
 
-            // Hapus kursi yang dipesan dari daftar available_seats
-            $newAvailableSeats = array_values(array_diff($currentAvailableSeats, $seatsToBook));
+            // Pindahkan kursi dari available ke held
+            $newAvailableSeats = array_values(array_diff($currentAvailableSeats, $seatsToHold));
+            $newHeldSeats = array_unique(array_merge($currentHeldSeats, $seatsToHold));
+            sort($newAvailableSeats);
+            sort($newHeldSeats);
+
             $kendaraan->available_seats = $newAvailableSeats;
-            $kendaraan->save(); // Simpan perubahan
+            $kendaraan->held_seats = $newHeldSeats;
+            $kendaraan->save(); // Simpan perubahan di database
 
-            DB::commit(); // Commit transaksi
+            DB::commit();
+            Log::info("DEBUG_KENDARAAN_HOLD: Kursi berhasil ditahan. New Available Seats: " . json_encode($newAvailableSeats) . ", New Held Seats: " . json_encode($newHeldSeats));
 
-            // Format URL gambar agar dapat diakses dari Flutter setelah update
-            // Gunakan $kendaraan->fresh() untuk mendapatkan data terbaru setelah save
-            $updatedKendaraan = $kendaraan->fresh();
+            $updatedKendaraan = $kendaraan->fresh(); // Ambil data terbaru setelah disimpan
             if ($updatedKendaraan->gambar) {
                 $updatedKendaraan->gambar = asset('storage/' . $updatedKendaraan->gambar);
             }
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Kursi berhasil dipesan.',
-                'data' => $updatedKendaraan, // Mengembalikan data kendaraan yang diperbarui
+                'message' => 'Kursi berhasil ditahan.',
+                'data' => $updatedKendaraan,
             ]);
 
         } catch (ValidationException $e) {
             DB::rollBack();
+            Log::error("DEBUG_KENDARAAN_HOLD: Validation Error: " . json_encode($e->errors()));
             return response()->json([
                 'status' => 'error',
                 'message' => 'Kesalahan validasi',
                 'errors' => $e->errors(),
                 'data' => null,
-            ], 422); // Unprocessable Entity
+            ], 422);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             DB::rollBack();
+            Log::error("DEBUG_KENDARAAN_HOLD: ModelNotFoundException: " . $e->getMessage());
             return response()->json([
                 'status' => 'error',
                 'message' => 'Kendaraan tidak ditemukan.',
@@ -126,36 +138,123 @@ class KendaraanController extends Controller
             ], 404);
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error("DEBUG_KENDARAAN_HOLD: General Error: " . $e->getMessage() . " on line " . $e->getLine());
             return response()->json([
                 'status' => 'error',
-                'message' => 'Gagal memesan kursi: ' . $e->getMessage(),
+                'message' => 'Gagal menahan kursi: ' . $e->getMessage(),
+                'data' => null,
+            ], 500);
+        }
+    }
+
+    public function releaseHeldSeats(Request $request, $kendaraanId)
+    {
+        DB::beginTransaction();
+
+        try {
+            $request->validate([
+                'seats_to_release' => 'required|array',
+                'seats_to_release.*' => 'integer|min:1',
+            ]);
+
+            $kendaraan = Kendaraan::where('id', $kendaraanId)->lockForUpdate()->firstOrFail();
+
+            $currentAvailableSeats = collect($kendaraan->available_seats ?? [])->map(fn($item) => (int) $item)->toArray();
+            $currentHeldSeats = collect($kendaraan->held_seats ?? [])->map(fn($item) => (int) $item)->toArray();
+            $seatsToRelease = collect($request->input('seats_to_release'))->map(fn($item) => (int) $item)->toArray();
+
+            Log::info("DEBUG_KENDARAAN_RELEASE: releaseHeldSeats for Kendaraan ID: $kendaraanId");
+            Log::info("DEBUG_KENDARAAN_RELEASE: Current Held Seats (LOCKED): " . json_encode($currentHeldSeats));
+            Log::info("DEBUG_KENDARAAN_RELEASE: Seats to Release from Request: " . json_encode($seatsToRelease));
+
+            $seatsActuallyReleased = [];
+            foreach ($seatsToRelease as $seat) {
+                if (in_array($seat, $currentHeldSeats)) {
+                    $seatsActuallyReleased[] = $seat;
+                } else {
+                    // Kursi tidak ditemukan di held_seats, mungkin sudah dilepas oleh cron atau proses lain
+                    Log::warning("DEBUG_KENDARAAN_RELEASE: Kursi $seat TIDAK DITEMUKAN di held_seats saat proses rilis.");
+                }
+            }
+
+            if (empty($seatsActuallyReleased)) {
+                DB::rollBack();
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Tidak ada kursi yang valid untuk dilepas dari held_seats.',
+                    'data' => $kendaraan->fresh()->toArray(),
+                ], 422);
+            }
+
+            // Pindahkan kursi yang benar-benar ada di held_seats kembali ke available
+            $newHeldSeats = array_values(array_diff($currentHeldSeats, $seatsActuallyReleased));
+            $newAvailableSeats = array_unique(array_merge($currentAvailableSeats, $seatsActuallyReleased));
+            sort($newAvailableSeats);
+            sort($newHeldSeats);
+
+            $kendaraan->available_seats = $newAvailableSeats;
+            $kendaraan->held_seats = $newHeldSeats;
+            $kendaraan->save();
+
+            DB::commit();
+            Log::info("DEBUG_KENDARAAN_RELEASE: Kursi berhasil dilepas. New Available Seats: " . json_encode($newAvailableSeats) . ", New Held Seats: " . json_encode($newHeldSeats));
+
+            $updatedKendaraan = $kendaraan->fresh();
+            if ($updatedKendaraan->gambar) {
+                $updatedKendaraan->gambar = asset('storage/' . $updatedKendaraan->gambar);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Kursi berhasil dikembalikan ke tersedia.',
+                'data' => $updatedKendaraan,
+            ]);
+
+        } catch (ValidationException $e) {
+            DB::rollBack();
+            Log::error("DEBUG_KENDARAAN_RELEASE: Validation Error: " . json_encode($e->errors()));
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Kesalahan validasi',
+                'errors' => $e->errors(),
+                'data' => null,
+            ], 422);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            DB::rollBack();
+            Log::error("DEBUG_KENDARAAN_RELEASE: ModelNotFoundException: " . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Kendaraan tidak ditemukan.',
+                'data' => null,
+            ], 404);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error("DEBUG_KENDARAAN_RELEASE: General Error: " . $e->getMessage() . " on line " . $e->getLine());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengembalikan kursi: ' . $e->getMessage(),
                 'data' => null,
             ], 500);
         }
     }
 
     // --- Bagian Admin untuk Kendaraan (CRUD) ---
-    /**
-     * Display a listing of all vehicles (for admin).
-     */
     public function indexAdmin()
     {
-        $kendaraans = Kendaraan::with('destinasi')->get(); // eager load destinasi
+        $kendaraans = Kendaraan::with('destinasi')->get();
+        $kendaraans->each(function ($kendaraan) {
+            $kendaraan->available_seats = collect($kendaraan->available_seats ?? [])->map(fn($item) => (int) $item)->toArray();
+            $kendaraan->held_seats = collect($kendaraan->held_seats ?? [])->map(fn($item) => (int) $item)->toArray();
+        });
         return view('admin.kendaraan.index', compact('kendaraans'));
     }
 
-    /**
-     * Show the form for creating a new vehicle (for admin).
-     */
     public function createAdmin()
     {
-        $destinasis = Destinasi::all(); // Fetch all destinations to link
+        $destinasis = Destinasi::all();
         return view('admin.kendaraan.create', compact('destinasis'));
     }
 
-    /**
-     * Store a newly created vehicle in storage (for admin).
-     */
     public function storeAdmin(Request $request)
     {
         $request->validate([
@@ -181,25 +280,19 @@ class KendaraanController extends Controller
             'harga' => $request->harga,
             'fasilitas' => $request->fasilitas,
             'gambar' => $imagePath,
-            // Inisialisasi semua kursi sebagai tersedia, pastikan dimulai dari 1
-            'available_seats' => array_values(range(1, $request->kapasitas)),
+            'available_seats' => array_values(range(1, (int)$request->kapasitas)),
+            'held_seats' => [], // Inisialisasi held_seats kosong
         ]);
 
         return redirect()->route('admin.kendaraan.index')->with('success', 'Kendaraan berhasil ditambahkan.');
     }
 
-    /**
-     * Show the form for editing the specified vehicle (for admin).
-     */
     public function editAdmin(Kendaraan $kendaraan)
     {
         $destinasis = Destinasi::all();
         return view('admin.kendaraan.edit', compact('kendaraan', 'destinasis'));
     }
 
-    /**
-     * Update the specified vehicle in storage (for admin).
-     */
     public function updateAdmin(Request $request, Kendaraan $kendaraan)
     {
         $request->validate([
@@ -220,29 +313,40 @@ class KendaraanController extends Controller
             $imagePath = $request->file('gambar')->store('kendaraan_images', 'public');
         }
 
-        $currentAvailableSeats = $kendaraan->available_seats ?? [];
-        if (!is_array($currentAvailableSeats)) {
-            $currentAvailableSeats = json_decode($currentAvailableSeats, true) ?? [];
-        }
+        $currentAvailableSeats = collect($kendaraan->available_seats ?? [])->map(fn($item) => (int) $item)->toArray();
+        $currentHeldSeats = collect($kendaraan->held_seats ?? [])->map(fn($item) => (int) $item)->toArray();
 
-        // Jika kapasitas berubah, kita perlu menginisialisasi ulang available_seats
         if ($request->kapasitas != $kendaraan->kapasitas) {
-            $newCapacity = $request->kapasitas;
+            $newCapacity = (int)$request->kapasitas;
             $newAvailableSeats = [];
-            // Pertahankan kursi yang sudah ada dan masih valid
+            $newHeldSeatsAfterCapacityChange = [];
+
+            // Pertahankan kursi yang masih valid dalam kapasitas baru
             foreach ($currentAvailableSeats as $seat) {
                 if ($seat <= $newCapacity) {
                     $newAvailableSeats[] = $seat;
                 }
             }
-            // Tambahkan kursi baru jika kapasitas bertambah
-            for ($i = $kendaraan->kapasitas + 1; $i <= $newCapacity; $i++) {
-                $newAvailableSeats[] = $i;
+            foreach ($currentHeldSeats as $seat) {
+                if ($seat <= $newCapacity) {
+                    $newHeldSeatsAfterCapacityChange[] = $seat;
+                }
             }
-            sort($newAvailableSeats); // Urutkan kembali kursi
+
+            // Tambahkan kursi baru jika kapasitas meningkat
+            for ($i = $kendaraan->kapasitas + 1; $i <= $newCapacity; $i++) {
+                // Hanya tambahkan ke available jika belum ada di held
+                if (!in_array($i, $newHeldSeatsAfterCapacityChange)) {
+                    $newAvailableSeats[] = $i;
+                }
+            }
+            sort($newAvailableSeats);
+            sort($newHeldSeatsAfterCapacityChange); // Sort held seats too
             $availableSeatsToSave = $newAvailableSeats;
+            $heldSeatsToSave = $newHeldSeatsAfterCapacityChange;
         } else {
             $availableSeatsToSave = $currentAvailableSeats;
+            $heldSeatsToSave = $currentHeldSeats;
         }
 
         $kendaraan->update([
@@ -253,15 +357,13 @@ class KendaraanController extends Controller
             'harga' => $request->harga,
             'fasilitas' => $request->fasilitas,
             'gambar' => $imagePath,
-            'available_seats' => $availableSeatsToSave, // Simpan array yang diperbarui
+            'available_seats' => $availableSeatsToSave,
+            'held_seats' => $heldSeatsToSave, // Simpan held seats
         ]);
 
         return redirect()->route('admin.kendaraan.index')->with('success', 'Kendaraan berhasil diperbarui.');
     }
 
-    /**
-     * Remove the specified vehicle from storage (for admin).
-     */
     public function destroyAdmin(Kendaraan $kendaraan)
     {
         if ($kendaraan->gambar && Storage::disk('public')->exists($kendaraan->gambar)) {
