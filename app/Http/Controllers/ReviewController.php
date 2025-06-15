@@ -11,18 +11,25 @@ class ReviewController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'destinasi_id' => 'required|exists:destinasis,id',
+            'user_id' => 'required',
+            'destinasi_id' => 'required',
             'order_id' => 'required',
-            'user_name' => 'required|string',
+            'user_name' => 'required',
+            'comment' => 'required',
             'rating' => 'required|integer|min:1|max:5',
-            'comment' => 'required|string',
         ]);
 
-        $review = Review::create($validated);
+        // Cek apakah user sudah pernah review order ini
+        $existing = Review::where('order_id', $validated['order_id'])
+            ->where('user_id', $validated['user_id'])
+            ->first();
+        if ($existing) {
+            return response()->json(['message' => 'Review already exists.'], 409);
+        }
 
-        return response()->json(['success' => true, 'review' => $review]);
-    }
+        $review = Review::create($validated);
+        return response()->json($review, 201);
+    } 
 
     public function update(Request $request, $id)
     {
@@ -44,4 +51,3 @@ class ReviewController extends Controller
         return response()->json(['review' => $review]);
     }
 }
-
