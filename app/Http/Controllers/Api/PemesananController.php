@@ -100,9 +100,6 @@ class PemesananController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error("DEBUG_PEMESANAN_STORE: General Error: " . $e->getMessage() . " on line " . $e->getLine());
-            // Jika ada error di sini setelah kursi berhasil di-hold, Anda mungkin ingin melepas kursinya kembali.
-            // Ini bisa dilakukan dengan memanggil releaseHeldSeats dari sini jika $seatsToBook sudah diketahui.
-            // Untuk kesederhanaan dan keandalan, disarankan menggunakan cron job untuk rilis otomatis.
             return response()->json([
                 'status' => 'error',
                 'message' => 'Gagal membuat pemesanan: ' . $e->getMessage(),
@@ -330,7 +327,10 @@ class PemesananController extends Controller
         }
     }
 
-
+    /**
+     * API: Mengambil daftar pemesanan.
+     * Dapat difilter berdasarkan status dan pencarian.
+     */
     public function index(Request $request)
     {
         $query = Pemesanan::with(['user', 'destinasi', 'kendaraan']);
@@ -380,7 +380,62 @@ class PemesananController extends Controller
         ]);
     }
 
+    /**
+     * WEB: Mengambil daftar pemesanan untuk tampilan admin.
+     * Ini adalah metode baru yang ditambahkan untuk merender Blade view.
+     */
+    public function indexAdmin(Request $request)
+    {
+        $query = Pemesanan::with(['user', 'destinasi', 'kendaraan']);
 
+        // Pastikan hanya admin yang bisa mengakses semua data, user hanya melihat data mereka sendiri
+        $isAdmin = Auth::check() && Auth::user()->is_admin;
+
+        if (!$isAdmin) {
+            $query->where('user_id', Auth::id());
+        }
+
+        if ($request->has('status') && $request->status != 'all') {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->has('search')) {
+            $search = $request->search;
+            $query->whereHas('destinasi', function ($q) use ($search) {
+                $q->where('nama', 'like', '%' . $search . '%');
+            })->orWhereHas('user', function ($q) use ($search) {
+                $q->where('name', 'like', '%' . $search . '%');
+            });
+        }
+
+        $pemesanans = $query->orderBy('created_at', 'desc')->get();
+
+        $pemesanans->each(function ($pemesanan) {
+            if ($pemesanan->destinasi && $pemesanan->destinasi->gambar) {
+                $pemesanan->destinasi->gambar = asset('storage/' . $pemesanan->destinasi->gambar);
+            }
+            if ($pemesanan->kendaraan && $pemesanan->kendaraan->gambar) {
+                $pemesanan->kendaraan->gambar = asset('storage/' . $pemesanan->kendaraan->gambar);
+            }
+            if ($pemesanan->kendaraan) {
+                $pemesanan->kendaraan->available_seats = collect($pemesanan->kendaraan->available_seats ?? [])->map(function($item) {
+                    return (int) $item;
+                })->toArray();
+                $pemesanan->kendaraan->held_seats = collect($pemesanan->kendaraan->held_seats ?? [])->map(function($item) {
+                    return (int) $item;
+                })->toArray();
+            }
+        });
+
+        // Mengembalikan view Blade dengan data
+        return view('admin.pemesanan.index', ['data' => $pemesanans]);
+    }
+
+
+    /**
+     * API: Mengambil detail pemesanan.
+     * Digunakan oleh API.
+     */
     public function show($id)
     {
         try {
@@ -429,6 +484,51 @@ class PemesananController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * WEB: Menampilkan detail pemesanan untuk admin.
+     * Ini adalah metode baru yang ditambahkan untuk merender Blade view.
+     */
+    public function showAdmin($id)
+    {
+        try {
+            $pemesanan = Pemesanan::with(['user', 'destinasi', 'kendaraan'])->findOrFail($id);
+
+            // Jika Anda ingin membatasi agar hanya admin yang bisa melihat ini:
+            if (!Auth::user()->is_admin) {
+                return redirect()->route('admin.home')->with('error', 'Anda tidak memiliki akses untuk melihat pemesanan ini.');
+            }
+
+            // Tambahkan logika untuk memformat gambar jika ada
+            if ($pemesanan->destinasi && $pemesanan->destinasi->gambar) {
+                $pemesanan->destinasi->gambar = asset('storage/' . $pemesanan->destinasi->gambar);
+            }
+            if ($pemesanan->kendaraan && $pemesanan->kendaraan->gambar) {
+                $pemesanan->kendaraan->gambar = asset('storage/' . $pemesanan->kendaraan->gambar);
+            }
+            // Pastikan selected_seats dikonversi ke integer untuk konsistensi
+            if ($pemesanan->selected_seats) {
+                $pemesanan->selected_seats = collect($pemesanan->selected_seats)->map(fn($item) => (int) $item)->toArray();
+            }
+            if ($pemesanan->kendaraan) {
+                $pemesanan->kendaraan->available_seats = collect($pemesanan->kendaraan->available_seats ?? [])->map(function($item) {
+                    return (int) $item;
+                })->toArray();
+                $pemesanan->kendaraan->held_seats = collect($pemesanan->kendaraan->held_seats ?? [])->map(function($item) {
+                    return (int) $item;
+                })->toArray();
+            }
+
+
+            return view('admin.pemesanan.show', compact('pemesanan'));
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return redirect()->route('admin.pemesanan.index')->with('error', 'Pemesanan tidak ditemukan.');
+        } catch (\Exception $e) {
+            Log::error("Error in showAdmin Pemesanan: " . $e->getMessage() . " on line " . $e->getLine());
+            return redirect()->route('admin.pemesanan.index')->with('error', 'Gagal mengambil detail pemesanan: ' . $e->getMessage());
+        }
+    }
+
 
     public function update(Request $request, $id)
     {

@@ -65,8 +65,13 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->as('admin.')->group(fu
     Route::delete('/destinasi/{id}', [DestinasiController::class, 'destroy'])->name('destinasi.destroy');
 
     // Pemesanan (Booking/Order) Management for Admin Web Panel
-    Route::get('/pemesanan', [PemesananController::class, 'index'])->name('pemesanan.index');
+    Route::get('/pemesanan', [PemesananController::class, 'indexAdmin'])->name('pemesanan.index');
+    // RUTE BARU UNTUK MENAMPILKAN DETAIL PEMESANAN DI ADMIN PANEL
+    Route::get('/pemesanan/{pemesanan}', [PemesananController::class, 'showAdmin'])->name('pemesanan.show');
     Route::get('/pemesanan/{pemesanan}/edit', [PemesananController::class, 'editAdmin'])->name('pemesanan.edit');
     Route::put('/pemesanan/{pemesanan}', [PemesananController::class, 'update'])->name('pemesanan.update');
     Route::delete('/pemesanan/{pemesanan}', [PemesananController::class, 'destroy'])->name('pemesanan.destroy');
+    Route::put('/pemesanan/{pemesanan}/cancel', [PemesananController::class, 'cancelPemesanan'])->name('pemesanan.cancel');
 });
+
+// API Routes (tidak perlu diubah)

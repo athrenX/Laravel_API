@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Dashboard Admin untuk Kelola Destinasi, Lokasi, Aktivitas, dan Kendaraan" />
+    <meta name="description" content="Dashboard Admin untuk Kelola Destinasi, Lokasi, Aktivitas, Kendaraan, dan Pemesanan" />
     <title>Dashboard Admin</title>
+    <!-- Tailwind CSS CDN for consistency, though custom styles are still present -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', sans-serif; /* Using Inter for consistency */
             background: #f3f4f6;
             margin: 0;
             display: flex;
@@ -62,6 +64,8 @@
         <a href="{{ route('admin.lokasi.index') }}" class="menu-button">Kelola Lokasi</a>
         <a href="{{ route('admin.activities.index') }}" class="menu-button">Kelola Aktivitas</a>
         <a href="{{ route('admin.kendaraan.index') }}" class="menu-button">Kelola Kendaraan</a>
+        <!-- New button for managing orders -->
+        <a href="{{ route('admin.pemesanan.index') }}" class="menu-button">Kelola Pemesanan</a>
     </div>
 </body>
 </html>

@@ -2,79 +2,85 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Kendaraan</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: sans-serif; background: #f3f4f6; padding: 30px; }
-        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        th, td { padding: 12px; border: 1px solid #e5e7eb; text-align: left; }
-        th { background: #3b82f6; color: white; }
-        .btn { padding: 8px 12px; background: #10b981; color: white; text-decoration: none; border-radius: 5px; }
-        .btn-danger { background: #ef4444; }
-        .btn-danger:hover { background: #dc2626; }
-        .btn-edit { background: #f59e0b; }
-        .btn-edit:hover { background: #d97706; }
-        .top-bar { margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        h2 { color: #1f2937; }
+        /* Inter font for better typography */
+        body {
+            font-family: "Inter", sans-serif;
+        }
     </style>
 </head>
-<body>
+<body class="bg-gray-100 p-8 antialiased">
 
-    <div class="top-bar">
-        <h2>Daftar Kendaraan</h2>
-        <a href="{{ route('admin.kendaraan.create') }}" class="btn">+ Tambah Kendaraan</a>
+    <div class="top-bar flex justify-between items-center mb-6">
+        <h2 class="text-3xl font-bold text-gray-800">Daftar Kendaraan</h2>
+        <div class="flex space-x-3">
+            <!-- Kembali ke Dashboard Admin Button (already present and styled) -->
+            <a href="{{ route('admin.home') }}" class="btn bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75">
+                &larr; Kembali ke Dashboard
+            </a>
+            <a href="{{ route('admin.kendaraan.create') }}" class="btn bg-emerald-500 hover:bg-emerald-600 text-white py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-opacity-75">
+                + Tambah Kendaraan
+            </a>
+        </div>
     </div>
 
     @if(session('success'))
-        <div style="background:#dcfce7;padding:10px;color:#166534;border-radius:5px;margin-bottom:15px;">
+        <div class="bg-green-100 text-green-700 p-4 rounded-md mb-6 shadow-sm" role="alert">
             {{ session('success') }}
         </div>
     @endif
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Destinasi</th>
-                <th>Jenis</th>
-                <th>Tipe</th>
-                <th>Kapasitas</th>
-                <th>Kursi Tersedia</th>
-                <th>Harga</th>
-                <th>Fasilitas</th>
-                <th>Gambar</th>
-                <th>Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($kendaraans as $k)
+    <div class="overflow-x-auto rounded-lg shadow-lg">
+        <table class="min-w-full bg-white">
+            <thead>
                 <tr>
-                    <td>{{ $k->id }}</td>
-                    <td>{{ $k->destinasi->nama ?? 'N/A' }}</td>
-                    <td>{{ $k->jenis }}</td>
-                    <td>{{ $k->tipe }}</td>
-                    <td>{{ $k->kapasitas }}</td>
-                    <td>{{ implode(', ', $k->available_seats ?? []) }}</td> {{-- Pastikan menampilkan array dengan aman --}}
-                    <td>Rp{{ number_format($k->harga, 0, ',', '.') }}</td>
-                    <td>{{ $k->fasilitas }}</td>
-                    <td>
-                        @if($k->gambar)
-                            <img src="{{ asset('storage/' . $k->gambar) }}" alt="gambar" width="80">
-                        @else
-                            -
-                        @endif
-                    </td>
-                    <td>
-                        <a href="{{ route('admin.kendaraan.edit', $k->id) }}" class="btn btn-edit">Edit</a>
-                        <form action="{{ route('admin.kendaraan.destroy', $k->id) }}" method="POST" style="display:inline-block;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-danger" onclick="return confirm('Apakah Anda yakin ingin menghapus kendaraan ini?')">Hapus</button>
-                        </form>
-                    </td>
+                    <th class="py-3 px-4 bg-blue-600 text-white text-left text-sm font-semibold rounded-tl-lg">ID</th>
+                    <th class="py-3 px-4 bg-blue-600 text-white text-left text-sm font-semibold">Destinasi</th>
+                    <th class="py-3 px-4 bg-blue-600 text-white text-left text-sm font-semibold">Jenis</th>
+                    <th class="py-3 px-4 bg-blue-600 text-white text-left text-sm font-semibold">Tipe</th>
+                    <th class="py-3 px-4 bg-blue-600 text-white text-left text-sm font-semibold">Kapasitas</th>
+                    <th class="py-3 px-4 bg-blue-600 text-white text-left text-sm font-semibold">Kursi Tersedia</th>
+                    <th class="py-3 px-4 bg-blue-600 text-white text-left text-sm font-semibold">Harga</th>
+                    <th class="py-3 px-4 bg-blue-600 text-white text-left text-sm font-semibold">Fasilitas</th>
+                    <th class="py-3 px-4 bg-blue-600 text-white text-left text-sm font-semibold">Gambar</th>
+                    <th class="py-3 px-4 bg-blue-600 text-white text-left text-sm font-semibold rounded-tr-lg">Aksi</th>
                 </tr>
-            @endforeach
-        </tbody>
-    </table>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                @foreach($kendaraans as $k)
+                    <tr class="hover:bg-gray-50">
+                        <td class="py-3 px-4 text-sm text-gray-700">{{ $k->id }}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">{{ $k->destinasi->nama ?? 'N/A' }}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">{{ $k->jenis }}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">{{ $k->tipe }}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">{{ $k->kapasitas }}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">{{ implode(', ', $k->available_seats ?? []) }}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">Rp{{ number_format($k->harga, 0, ',', '.') }}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">{{ $k->fasilitas }}</td>
+                        <td class="py-3 px-4 text-sm text-gray-700">
+                            @if($k->gambar)
+                                <img src="{{ asset('storage/' . $k->gambar) }}" alt="gambar" class="w-20 h-auto rounded-md shadow-sm object-cover">
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td class="py-3 px-4 text-sm flex space-x-2">
+                            <a href="{{ route('admin.kendaraan.edit', $k->id) }}" class="btn bg-amber-500 hover:bg-amber-600 text-white py-1 px-3 rounded-md shadow-sm transition duration-300 ease-in-out">Edit</a>
+                            <form action="{{ route('admin.kendaraan.destroy', $k->id) }}" method="POST" style="display:inline-block;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn bg-red-600 hover:bg-red-700 text-white py-1 px-3 rounded-md shadow-sm transition duration-300 ease-in-out" onclick="return confirm('Apakah Anda yakin ingin menghapus kendaraan ini?')">Hapus</button>
+                            </form>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
 
 </body>
 </html>
