@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
+use Illuminate\Support\Str; 
 
 class PemesananController extends Controller
 {
@@ -357,17 +358,18 @@ class PemesananController extends Controller
         $pemesanans = $query->orderBy('created_at', 'desc')->get();
 
         $pemesanans->each(function ($pemesanan) {
-            if ($pemesanan->destinasi && $pemesanan->destinasi->gambar) {
-                $pemesanan->destinasi->gambar = asset('storage/' . $pemesanan->destinasi->gambar);
-            }
+        
             if ($pemesanan->kendaraan && $pemesanan->kendaraan->gambar) {
-                $pemesanan->kendaraan->gambar = asset('storage/' . $pemesanan->kendaraan->gambar);
+                if (!Str::startsWith($pemesanan->kendaraan->gambar, ['http://', 'https://'])) {
+                    $pemesanan->kendaraan->gambar = asset('storage/' . $pemesanan->kendaraan->gambar);
+                }
             }
+        
             if ($pemesanan->kendaraan) {
-                $pemesanan->kendaraan->available_seats = collect($pemesanan->kendaraan->available_seats ?? [])->map(function($item) {
+                $pemesanan->kendaraan->available_seats = collect($pemesanan->kendaraan->available_seats ?? [])->map(function ($item) {
                     return (int) $item;
                 })->toArray();
-                $pemesanan->kendaraan->held_seats = collect($pemesanan->kendaraan->held_seats ?? [])->map(function($item) {
+                $pemesanan->kendaraan->held_seats = collect($pemesanan->kendaraan->held_seats ?? [])->map(function ($item) {
                     return (int) $item;
                 })->toArray();
             }

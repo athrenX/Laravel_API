@@ -48,5 +48,8 @@ class Destinasi extends Model
         return $this->hasMany(Kendaraan::class);
     }
 
-
+    public function reviews()
+    {
+        return $this->hasMany(Review::class, 'destinasi_id');
+    }
 }

@@ -9,6 +9,7 @@ use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\WishlistController;
 use App\Http\Controllers\Api\KendaraanController;
 use App\Http\Controllers\Api\PemesananController;
+use App\Http\Controllers\ReviewController; // Pastikan ini sudah ada
 
 // Public Routes
 Route::post('/register', [AuthController::class, 'register']);
@@ -34,6 +35,10 @@ Route::middleware(['auth:sanctum'])->group(function () {
     // REST API Resource for Destinations
     Route::apiResource('destinasis', DestinasiController::class);
 
+    // Tambahkan route ini untuk mendapatkan review berdasarkan destinasi_id
+    Route::get('/destinasis/{destinasiId}/reviews', [ReviewController::class, 'getReviewsByDestinasi']);
+
+
     // Kendaraan (Vehicle) Routes
     Route::prefix('kendaraan')->group(function () {
         Route::get('/by-destinasi/{destinasiId}', [KendaraanController::class, 'indexByDestinasi']);
@@ -51,4 +56,9 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Custom route for users to view their own bookings.
     Route::get('/my-pemesanans', [PemesananController::class, 'index']);
+
+    // Review management
+    Route::post('/reviews', [ReviewController::class, 'store']);
+    Route::put('/reviews/{id}', [ReviewController::class, 'update']);
+    Route::get('/reviews/order/{order_id}', [ReviewController::class, 'showByOrder']);
 });
