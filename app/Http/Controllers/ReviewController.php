@@ -10,6 +10,11 @@ use Illuminate\Support\Facades\URL; // <-- WAJIB: Tambahkan ini untuk URL helper
 
 class ReviewController extends Controller
 {
+    public function index()
+    {
+        $reviews = \App\Models\Review::with(['user', 'destinasi'])->orderBy('created_at', 'desc')->get();
+        return response()->json($reviews);
+    }
     /**
      * Menyimpan review baru dan memperbarui rating destinasi.
      *
@@ -27,22 +32,31 @@ class ReviewController extends Controller
             'comment' => 'required|string',
         ]);
 
-        // Opsional: Jika Anda ingin menyimpan user_profile_picture_url langsung di tabel 'reviews'
-        // dan kolom 'user_profile_picture_url' sudah ada di tabel 'reviews'.
-        $user = User::find($validated['user_id']);
-        if ($user && $user->foto_profil) {
-            // Menggunakan URL::to() untuk mendapatkan URL lengkap
-            $validated['user_profile_picture_url'] = URL::to('storage/' . $user->foto_profil); // <-- PERBAIKAN DI SINI
-        } else {
-             $validated['user_profile_picture_url'] = null; // Pastikan null jika tidak ada foto
+        // Cek jika sudah ada review untuk order_id ini
+        $existing = \App\Models\Review::where('order_id', $validated['order_id'])->first();
+        if ($existing) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Review untuk pemesanan ini sudah dibuat.',
+                'review' => $existing,
+            ], 409); // 409 Conflict
         }
 
-        $review = Review::create($validated);
+        // Opsional: Tambahkan foto profil user jika ada
+        $user = \App\Models\User::find($validated['user_id']);
+        if ($user && $user->foto_profil) {
+            $validated['user_profile_picture_url'] = URL::to('storage/' . $user->foto_profil);
+        } else {
+            $validated['user_profile_picture_url'] = null;
+        }
+
+        $review = \App\Models\Review::create($validated);
 
         $this->_updateDestinasiRating($validated['destinasi_id']);
 
         return response()->json(['success' => true, 'review' => $review], 201);
     }
+
 
     /**
      * Memperbarui review yang sudah ada dan memperbarui rating destinasi.
@@ -65,9 +79,9 @@ class ReviewController extends Controller
         // Opsional: Jika Anda menyimpan user_profile_picture_url di tabel 'reviews'
         $user = User::find($review->user_id);
         if ($user && $user->foto_profil) {
-             $validated['user_profile_picture_url'] = URL::to('storage/' . $user->foto_profil); // <-- PERBAIKAN DI SINI
+            $validated['user_profile_picture_url'] = URL::to('storage/' . $user->foto_profil); // <-- PERBAIKAN DI SINI
         } else {
-             $validated['user_profile_picture_url'] = null;
+            $validated['user_profile_picture_url'] = null;
         }
 
         $review->update($validated);
@@ -86,8 +100,8 @@ class ReviewController extends Controller
     public function showByOrder($order_id)
     {
         $review = Review::where('order_id', $order_id)
-                        ->with(['user:id,foto_profil']) // Masih menggunakan relasi
-                        ->first();
+            ->with(['user:id,foto_profil']) // Masih menggunakan relasi
+            ->first();
 
         if (!$review) {
             return response()->json(['message' => 'Review not found for this order ID.'], 404);
@@ -116,22 +130,22 @@ class ReviewController extends Controller
     {
         // Lakukan join dengan tabel users untuk mendapatkan foto profil
         $reviews = Review::where('reviews.destinasi_id', $destinasi_id)
-                        ->join('users', 'reviews.user_id', '=', 'users.id')
-                        ->select(
-                            'reviews.*',
-                            'users.foto_profil' // <-- Pilih kolom foto_profil mentah
-                        )
-                        ->get()
-                        ->map(function($review) {
-                            // Tambahkan URL lengkap foto profil ke setiap objek review
-                            if ($review->foto_profil) {
-                                $review->user_profile_picture_url = URL::to('storage/' . $review->foto_profil); // <-- PERBAIKAN DI SINI
-                            } else {
-                                $review->user_profile_picture_url = null;
-                            }
-                            unset($review->foto_profil); // Hapus foto_profil mentah jika tidak diperlukan di respons
-                            return $review;
-                        });
+            ->join('users', 'reviews.user_id', '=', 'users.id')
+            ->select(
+                'reviews.*',
+                'users.foto_profil' // <-- Pilih kolom foto_profil mentah
+            )
+            ->get()
+            ->map(function ($review) {
+                // Tambahkan URL lengkap foto profil ke setiap objek review
+                if ($review->foto_profil) {
+                    $review->user_profile_picture_url = URL::to('storage/' . $review->foto_profil); // <-- PERBAIKAN DI SINI
+                } else {
+                    $review->user_profile_picture_url = null;
+                }
+                unset($review->foto_profil); // Hapus foto_profil mentah jika tidak diperlukan di respons
+                return $review;
+            });
 
         return response()->json($reviews);
     }

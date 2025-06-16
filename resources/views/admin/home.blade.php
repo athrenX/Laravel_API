@@ -64,8 +64,12 @@
         <a href="{{ route('admin.lokasi.index') }}" class="menu-button">Kelola Lokasi</a>
         <a href="{{ route('admin.activities.index') }}" class="menu-button">Kelola Aktivitas</a>
         <a href="{{ route('admin.kendaraan.index') }}" class="menu-button">Kelola Kendaraan</a>
+<<<<<<< HEAD
         <!-- New button for managing orders -->
         <a href="{{ route('admin.pemesanan.index') }}" class="menu-button">Kelola Pemesanan</a>
+=======
+        <a href="{{ route('admin.reviews.index') }}" class="menu-button">Kelola Review</a>
+>>>>>>> e223e610a283d40aa9a2851e6dbbf90a54696e0b
     </div>
 </body>
 </html>
