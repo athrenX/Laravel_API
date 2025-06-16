@@ -262,7 +262,7 @@ class KendaraanController extends Controller
             'jenis' => 'required|string|max:255',
             'tipe' => 'required|string|max:255',
             'kapasitas' => 'required|integer|min:1',
-            'harga' => 'required|numeric|min:0',
+            // 'harga' => 'required|numeric|min:0', // HAPUS BARIS INI
             'fasilitas' => 'nullable|string',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
@@ -277,7 +277,7 @@ class KendaraanController extends Controller
             'jenis' => $request->jenis,
             'tipe' => $request->tipe,
             'kapasitas' => $request->kapasitas,
-            'harga' => $request->harga,
+            // 'harga' => $request->harga, // HAPUS BARIS INI
             'fasilitas' => $request->fasilitas,
             'gambar' => $imagePath,
             'available_seats' => array_values(range(1, (int)$request->kapasitas)),
@@ -300,7 +300,7 @@ class KendaraanController extends Controller
             'jenis' => 'required|string|max:255',
             'tipe' => 'required|string|max:255',
             'kapasitas' => 'required|integer|min:1',
-            'harga' => 'required|numeric|min:0',
+            // 'harga' => 'required|numeric|min:0', // HAPUS BARIS INI
             'fasilitas' => 'nullable|string',
             'gambar' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
         ]);
@@ -354,7 +354,7 @@ class KendaraanController extends Controller
             'jenis' => $request->jenis,
             'tipe' => $request->tipe,
             'kapasitas' => $request->kapasitas,
-            'harga' => $request->harga,
+            // 'harga' => $request->harga, // HAPUS BARIS INI
             'fasilitas' => $request->fasilitas,
             'gambar' => $imagePath,
             'available_seats' => $availableSeatsToSave,

@@ -7,6 +7,7 @@ use App\Http\Controllers\LokasiController;
 use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\Api\KendaraanController;
 use App\Http\Controllers\Api\PemesananController;
+use App\Http\Controllers\ReviewController; // <--- BARIS INI DITAMBAHKAN!
 
 /*
 |--------------------------------------------------------------------------
@@ -39,6 +40,9 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->as('admin.')->group(fu
 
     // Activities Management (Web CRUD)
     Route::resource('activities', ActivityController::class);
+
+    // Reviews Management (Web CRUD) <--- BLOK INI DITAMBAHKAN!
+    Route::resource('reviews', ReviewController::class);
 
     // Kendaraan (Vehicle) Management (Web CRUD)
     Route::get('/kendaraan', [KendaraanController::class, 'indexAdmin'])->name('kendaraan.index');

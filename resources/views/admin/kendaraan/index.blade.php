@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daftar Kendaraan</title>
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         /* Inter font for better typography */
@@ -18,7 +17,6 @@
     <div class="top-bar flex justify-between items-center mb-6">
         <h2 class="text-3xl font-bold text-gray-800">Daftar Kendaraan</h2>
         <div class="flex space-x-3">
-            <!-- Kembali ke Dashboard Admin Button (already present and styled) -->
             <a href="{{ route('admin.home') }}" class="btn bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-md shadow-md transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-75">
                 &larr; Kembali ke Dashboard
             </a>
@@ -44,7 +42,6 @@
                     <th class="py-3 px-4 bg-blue-600 text-white text-left text-sm font-semibold">Tipe</th>
                     <th class="py-3 px-4 bg-blue-600 text-white text-left text-sm font-semibold">Kapasitas</th>
                     <th class="py-3 px-4 bg-blue-600 text-white text-left text-sm font-semibold">Kursi Tersedia</th>
-                    <th class="py-3 px-4 bg-blue-600 text-white text-left text-sm font-semibold">Harga</th>
                     <th class="py-3 px-4 bg-blue-600 text-white text-left text-sm font-semibold">Fasilitas</th>
                     <th class="py-3 px-4 bg-blue-600 text-white text-left text-sm font-semibold">Gambar</th>
                     <th class="py-3 px-4 bg-blue-600 text-white text-left text-sm font-semibold rounded-tr-lg">Aksi</th>
@@ -59,7 +56,6 @@
                         <td class="py-3 px-4 text-sm text-gray-700">{{ $k->tipe }}</td>
                         <td class="py-3 px-4 text-sm text-gray-700">{{ $k->kapasitas }}</td>
                         <td class="py-3 px-4 text-sm text-gray-700">{{ implode(', ', $k->available_seats ?? []) }}</td>
-                        <td class="py-3 px-4 text-sm text-gray-700">Rp{{ number_format($k->harga, 0, ',', '.') }}</td>
                         <td class="py-3 px-4 text-sm text-gray-700">{{ $k->fasilitas }}</td>
                         <td class="py-3 px-4 text-sm text-gray-700">
                             @if($k->gambar)

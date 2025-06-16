@@ -10,18 +10,18 @@ class Kendaraan extends Model
         'destinasi_id',
         'jenis',
         'kapasitas',
-        'harga',
+        // 'harga', // HAPUS BARIS INI
         'tipe',
         'gambar',
         'fasilitas',
         'available_seats',
-        'held_seats', // Pastikan ini ada
+        'held_seats',
     ];
 
     protected $casts = [
         'available_seats' => 'array',
-        'held_seats' => 'array', // Pastikan ini ada dan 'array'
-        'harga' => 'float',
+        'held_seats' => 'array',
+        // 'harga' => 'float', // HAPUS BARIS INI
     ];
 
     public function destinasi()

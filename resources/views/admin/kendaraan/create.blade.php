@@ -42,10 +42,6 @@
         <input type="number" name="kapasitas" value="{{ old('kapasitas') }}">
         @error('kapasitas') <div class="error">{{ $message }}</div> @enderror
 
-        <label>Harga</label>
-        <input type="number" name="harga" step="0.01" value="{{ old('harga') }}">
-        @error('harga') <div class="error">{{ $message }}</div> @enderror
-
         <label>Fasilitas (opsional)</label>
         <textarea name="fasilitas">{{ old('fasilitas', 'AC, Audio') }}</textarea>
 
